@@ -11,6 +11,11 @@ public class Cliente {
         this.nome = nome;
     }
 
+    public Cliente(int id, String nome) {
+        this.id = id;
+        this.nome = nome;
+    }
+
     public int getId(){
         return id;
     }
@@ -25,5 +30,13 @@ public class Cliente {
 
     public void setNome(String nome){
         this.nome = nome;
+    }
+
+    @Override
+    public String toString() {
+        return "Cliente{" +
+                "id=" + id +
+                ", nome='" + nome + '\'' +
+                '}';
     }
 }
