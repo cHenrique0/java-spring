@@ -2,62 +2,59 @@ package io.github.cHenrique0.domain.repository;
 
 import io.github.cHenrique0.domain.entity.Cliente;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import java.util.List;
 
 @Repository /* Classe que faz operações no banco de dados */
 public class ClienteRepository {
 
-    /* Scripts */
-    private static final String INSERT = "insert into cliente (nome) values (?)";
-    private static final String SELECT_ALL = "select * from cliente";
-    private static final String UPDATE = "update cliente set nome = ? where id = ?";
-    private static final String DELETE = "delete from cliente where id = ?";
-    private static final String SELECT_BY_NAME = "select * from cliente where nome like ?";
-
-    /* Conexão com o banco configurado em application.properties */
+    /* Interface jpa que faz as operações no banco de dados */
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private EntityManager entityManager;
 
+    @Transactional
     public void salvar(Cliente cliente) {
-        jdbcTemplate.update(INSERT, cliente.getNome()); // executa scripts sql — atualização, deleção e inserção
+        entityManager.persist(cliente);
     }
 
+    @Transactional
     public List<Cliente> listarTodos() {
-        return jdbcTemplate.query(SELECT_ALL, getClienteRowMapper());
+        return entityManager
+                .createQuery("from Cliente", Cliente.class)
+                .getResultList();
     }
 
+    @Transactional(readOnly = true) /* transação apenas leitura */
     public List<Cliente> buscarPorNome(String nome){
-        return jdbcTemplate.query(SELECT_BY_NAME, new Object[]{"%" + nome + "%"}, getClienteRowMapper());
+
+        String jpql = "select c from Cliente c where c.nome like :nome"; // os ':' definem o parametro jpa da query
+        TypedQuery<Cliente> query = entityManager.createQuery(jpql, Cliente.class);
+        query.setParameter("nome", "%"+nome+"%");
+
+        return query.getResultList();
     }
 
+    @Transactional
     public void atualizar(Cliente cliente) {
-        jdbcTemplate.update(UPDATE, cliente.getNome(), cliente.getId());
+        entityManager.merge(cliente);
     }
 
+    @Transactional
     public void deletar(Cliente cliente){
-        this.deletar(cliente.getId());
+        if(!entityManager.contains(cliente)) {
+            cliente = entityManager.merge(cliente);
+        }
+        entityManager.remove(cliente);
     }
 
+    @Transactional
     public void deletar(int id){
-        jdbcTemplate.update(DELETE, id);
-    }
-
-    private static RowMapper<Cliente> getClienteRowMapper() {
-        return new RowMapper<Cliente>() {
-            @Override
-            public Cliente mapRow(ResultSet resultSet, int i) throws SQLException {
-
-                int id = resultSet.getInt("id");
-                String nome = resultSet.getString("nome");
-
-                return new Cliente(id, nome);
-            }
-        };
+        /* busca o cliente pelo id */
+        Cliente cliente = entityManager.find(Cliente.class, id);
+        deletar(cliente);
     }
 }
