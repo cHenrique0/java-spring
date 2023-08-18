@@ -19,35 +19,35 @@ public class IntroApplication {
         return args -> {
             // Salva no banco
             System.out.println("\n/===== Inserindo dados =====/");
-            repository.salvar(new Cliente("Cliente teste 1"));
-            repository.salvar(new Cliente("Cliente teste 2"));
-            repository.salvar(new Cliente("Outro cliente 1"));
-            repository.salvar(new Cliente("Outro cliente 2"));
+            repository.save(new Cliente("Cliente teste 1"));
+            repository.save(new Cliente("Cliente teste 2"));
+            repository.save(new Cliente("Outro cliente 1"));
+            repository.save(new Cliente("Outro cliente 2"));
 
             // Lista os dados do banco
-            List<Cliente> clientes = repository.listarTodos();
+            List<Cliente> clientes = repository.findAll();
             clientes.forEach(System.out::println);
 
             // Atualiza os dados
             System.out.println("\n/===== Atualizando dados =====/");
             clientes.forEach(cliente -> {
                 cliente.setNome(cliente.getNome() + " atualizado");
-                repository.atualizar(cliente);
+                repository.save(cliente);
             });
-            clientes = repository.listarTodos();
+            clientes = repository.findAll();
             clientes.forEach(System.out::println);
 
             // Lista dados por nome
             System.out.println("\n/===== Buscando por dados especificos =====/");
-            List<Cliente> buscaPorNome = repository.buscarPorNome("teste");
+            List<Cliente> buscaPorNome = repository.findByNomeLike("teste");
             buscaPorNome.forEach(System.out::println);
 
             // Deleta uma dado
             System.out.println("\n/===== Deletando todos dados =====/");
-            clientes.forEach(repository::deletar);
+            clientes.forEach(repository::delete);
 
             System.out.println("\n/===== Listando os dados após as operações =====/");
-            clientes = repository.listarTodos();
+            clientes = repository.findAll();
             if (clientes.isEmpty()) {
                 System.out.println("> Nenhum cliente encontrado");
             }
